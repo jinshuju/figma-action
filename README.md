@@ -1,6 +1,6 @@
 # GitHub action for exporting Figma components
 
-> **NOTE**: This repository is no longer maintained.
+> Resolve the issue of Figma requesting images 413.
 
 [![npm version](https://img.shields.io/npm/v/@primer/figma-action.svg)](https://www.npmjs.org/package/@primer/figma-action)
 
