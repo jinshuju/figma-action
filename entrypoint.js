@@ -76,21 +76,28 @@ client.file(fileId)
   })
   .then(components => {
     console.log('Getting export urls')
-    return client.fileImages(
-      fileId,
-      {
-        format: options.format,
-        ids: Object.keys(components),
-        scale: options.scale
-      }
-    ).then(({data}) => {
-      for(const id of Object.keys(data.images)) {
-        components[id].image = data.images[id]
-      }
-      return components
+    const allComponentIds = Object.keys(components)
+    console.log('The number of components: ', allComponentIds.length)
+    console.log('The number of components with image: ', allComponentIds.filter(id => components[id].image).length)
+    const getFileImages = chunkArray(allComponentIds).map(ids => {
+      return client.fileImages(
+        fileId,
+        {
+          ids,
+          format: options.format,
+          scale: options.scale
+        }
+      ).then(({data}) => {
+        for(const id of Object.keys(data.images)) {
+          components[id].image = data.images[id]
+        }
+        return components
+      })
     })
+    return Promise.all(getFileImages).then(() => components)
   })
   .then(components => {
+    console.log('The number of components with image after request: ', Object.keys(components).filter(id => components[id].image).length)
     return ensureDir(join(options.outputDir))
       .then(() => writeFile(resolve(options.outputDir, 'data.json'), JSON.stringify(components), 'utf8'))
       .then(() => components)
@@ -125,4 +132,12 @@ function queueTasks(tasks, options) {
   }
   queue.start()
   return queue.onIdle()
+}
+
+function chunkArray(arr, chunkSize = 100) {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    chunks.push(arr.slice(i, i + chunkSize));
+  }
+  return chunks;
 }
